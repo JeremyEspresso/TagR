@@ -2,7 +2,7 @@
 using Remora.Rest.Core;
 using Remora.Results;
 
-namespace TagR.Application.Services;
+namespace TagR.Application.Services.Abstractions;
 
 public interface IDiscordMessageService
 {
