@@ -10,6 +10,8 @@ public static class ServiceCollectionExtensions
         serviceCollection.AddScoped<IMessageProcessingService, MessageProcessingService>();
         serviceCollection.AddSingleton<IDiscordMessageService, DiscordMessageService>();
         serviceCollection.AddSingleton<IClock, Clock>();
+
+        serviceCollection.AddScoped<ITagService, TagService>();
         return serviceCollection;
     }
 
