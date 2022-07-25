@@ -14,7 +14,7 @@ public class AuditLog
 
     public Snowflake Actor { get; set; }
 
-    public string Details { get; set; } = default!;
+    public string? Details { get; set; }
 
     public DateTime TimestampUtc { get; set; }
 }

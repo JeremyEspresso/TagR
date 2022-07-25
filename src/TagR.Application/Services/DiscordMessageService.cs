@@ -2,6 +2,7 @@
 using Remora.Discord.API.Abstractions.Rest;
 using Remora.Rest.Core;
 using Remora.Results;
+using TagR.Application.Services.Abstractions;
 
 namespace TagR.Application.Services;
 

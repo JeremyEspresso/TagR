@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Remora.Rest.Core;
+using TagR.Application.Services.Abstractions;
 using TagR.Database;
 
 namespace TagR.Application.Services;
@@ -21,6 +22,7 @@ public class MessageProcessingService : IMessageProcessingService
     {
         var content = StripPrefix(messageContent);
 
+        // TODO: Use TagService.GetMessageByName
         var tag = await _context.Tags.FirstOrDefaultAsync(t => t.Name == content, ct);
         if (tag is null)
         {
