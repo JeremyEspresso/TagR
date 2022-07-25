@@ -1,7 +1,7 @@
 ﻿using Remora.Discord.API.Abstractions.Gateway.Events;
 using Remora.Discord.Gateway.Responders;
 using Remora.Results;
-using TagR.Application.Services;
+using TagR.Application.Services.Abstractions;
 
 namespace TagR.Bot.Responders;
 
