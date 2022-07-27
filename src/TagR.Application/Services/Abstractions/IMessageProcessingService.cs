@@ -4,6 +4,6 @@ namespace TagR.Application.Services.Abstractions;
 
 public interface IMessageProcessingService
 {
-    Task ProcessMessageAsync(Snowflake channelId, string messageContent, CancellationToken ct = default);
+    Task ProcessMessageAsync(Snowflake channelId, Snowflake messageId, string messageContent, CancellationToken ct = default);
 }
 

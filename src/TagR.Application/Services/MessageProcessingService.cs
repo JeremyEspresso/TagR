@@ -1,41 +1,68 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Remora.Commands.Services;
+using Remora.Commands.Trees.Nodes;
 using Remora.Rest.Core;
 using TagR.Application.Services.Abstractions;
-using TagR.Database;
 
 namespace TagR.Application.Services;
 
 public class MessageProcessingService : IMessageProcessingService
 {
-    private readonly TagRDbContext _context;
+    private readonly ITagService _tagService;
     private readonly IDiscordMessageService _messageService;
     private readonly ILogger<MessageProcessingService> _logger;
 
-    public MessageProcessingService(TagRDbContext context, IDiscordMessageService messageService, ILogger<MessageProcessingService> logger)
+    private readonly IReadOnlyList<IChildNode> _commandGroupNames;
+
+    public MessageProcessingService
+    (
+        ITagService tagService,
+        IDiscordMessageService messageService,
+        CommandService commandService,
+        ILogger<MessageProcessingService> logger
+    )
     {
-        _context = context;
+        _tagService = tagService;
         _messageService = messageService;
         _logger = logger;
+
+        _commandGroupNames = GetCommandGroups(commandService);
     }
 
-    public async Task ProcessMessageAsync(Snowflake channelId, string messageContent, CancellationToken ct = default)
+    public async Task ProcessMessageAsync(Snowflake channelId, Snowflake messageId, string messageContent, CancellationToken ct = default)
     {
+        _logger.LogInformation("Processing message id: {messageId} ", messageId);
+
         var content = StripPrefix(messageContent);
 
-        // TODO: Use TagService.GetMessageByName
-        var tag = await _context.Tags.FirstOrDefaultAsync(t => t.Name == content, ct);
-        if (tag is null)
-        {
-            await _messageService.CreateMessageAsync(channelId, "Tag not found", ct);
+        if (_commandGroupNames.Any(c => content.StartsWith(c.Key)))
             return;
+
+        var getTag = await _tagService.GetTagByName(content);
+
+        if (!getTag.IsDefined(out var tag))
+        {
+            await _messageService.CreateMessageAsync(channelId, TagNotFoundText, ct);
         }
 
-        await _messageService.CreateMessageAsync(channelId, tag.Content, ct);
+        if (tag!.Disabled)
+            return;
+
+        await _messageService.CreateMessageAsync(channelId, tag!.Content, ct);
+        await _tagService.IncrementTagUseAsync(tag, ct);
     }
 
     private string StripPrefix(string messageContent)
     {
         return messageContent[1..];
     }
+
+    private IReadOnlyList<IChildNode> GetCommandGroups(CommandService cmdService)
+    {
+        return cmdService.TreeAccessor.TryGetNamedTree(null, out var tree)
+            ? tree.Root.Children
+            : throw new InvalidOperationException("Couldn't retrieve command tree.");
+    }
+
+    private const string TagNotFoundText = "Tag not found";
 }
 

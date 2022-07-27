@@ -11,10 +11,12 @@ namespace TagR.Application.Services;
 public class TagService : ITagService
 {
     private readonly TagRDbContext _context;
+    private readonly IClock _clock;
 
-    public TagService(TagRDbContext context)
+    public TagService(TagRDbContext context, IClock clock)
     {
         _context = context;
+        _clock = clock;
     }
 
     public async Task<Result<Tag>> CreateTagAsync(string tagName, string content, Snowflake actorId, CancellationToken ct = default)
@@ -24,6 +26,7 @@ public class TagService : ITagService
             Name = tagName,
             Content = content,
             OwnerDiscordSnowflake = actorId,
+            CreatedAtUtc = _clock.UtcNow,
         };
 
         var getTag = await GetTagByName(tagName, ct);
@@ -38,12 +41,17 @@ public class TagService : ITagService
         return newTag;
     }
 
-    public async Task<Result<Tag>> UpdateTagAsync(string tagName, string newContent, Snowflake actorId, CancellationToken ct = default)
+    public async Task<Result<Tag>> UpdateTagAsync(string tagName, string newContent, Snowflake actorId, bool isMod, CancellationToken ct = default)
     {
         var getTag = await GetTagByName(tagName, ct);
         if (!getTag.IsDefined(out var tag))
         {
             return Result<Tag>.FromError(new TagNotFoundError());
+        }
+
+        if (!isMod && tag.OwnerDiscordSnowflake != actorId)
+        {
+            return Result<Tag>.FromError(new TagNotOwnedByYouError());
         }
 
         tag.Content = newContent;
@@ -54,8 +62,7 @@ public class TagService : ITagService
         return tag;
     }
 
-    // TODO: Mods should be able to delete others their tags
-    public async Task<Result> DeleteTagAsync(string tagName, Snowflake actorId, CancellationToken ct = default)
+    public async Task<Result> DeleteTagAsync(string tagName, Snowflake actorId, bool isMod, CancellationToken ct = default)
     {
         var getTag = await GetTagByName(tagName, ct);
         if (!getTag.IsDefined(out var tag))
@@ -63,7 +70,7 @@ public class TagService : ITagService
             return Result.FromError(new TagNotFoundError());
         }
 
-        if (tag.OwnerDiscordSnowflake != actorId)
+        if (!isMod && tag.OwnerDiscordSnowflake != actorId)
         {
             return Result.FromError(new TagNotOwnedByYouError());
         }
@@ -74,8 +81,7 @@ public class TagService : ITagService
         return Result.FromSuccess();
     }
 
-    // TODO: Mod only
-    public async Task<Result> ToggleTagAsync(string tagName, Snowflake actorId, CancellationToken ct = default)
+    public async Task<Result> EnableTagAsync(string tagName, Snowflake actorId, bool isMod, CancellationToken ct = default)
     {
         var getTag = await GetTagByName(tagName, ct);
         if (!getTag.IsDefined(out var tag))
@@ -83,10 +89,45 @@ public class TagService : ITagService
             return Result.FromError(new TagNotFoundError());
         }
 
-        tag.Disabled = !tag.Disabled;
+        if (!isMod)
+        {
+            return Result.FromError(new InsufficientPermissionsError());
+        }
+
+        tag.Disabled = false;
         _context.Tags.Update(tag);
         await _context.SaveChangesAsync(ct);
 
+        return Result.FromSuccess();
+    }
+
+    public async Task<Result> DisableTagAsync(string tagName, Snowflake actorId, bool isMod, CancellationToken ct = default)
+    {
+        var getTag = await GetTagByName(tagName, ct);
+        if (!getTag.IsDefined(out var tag))
+        {
+            return Result.FromError(new TagNotFoundError());
+        }
+
+        if (!isMod)
+        {
+            return Result.FromError(new InsufficientPermissionsError());
+        }
+
+        tag.Disabled = true;
+        _context.Tags.Update(tag);
+        await _context.SaveChangesAsync(ct);
+
+        return Result.FromSuccess();
+    }
+
+    public async Task<Result> IncrementTagUseAsync(Tag tag, CancellationToken ct = default)
+    {
+        tag.Uses++;
+        
+        _context.Tags.Update(tag);
+        await _context.SaveChangesAsync(ct);
+        
         return Result.FromSuccess();
     }
 

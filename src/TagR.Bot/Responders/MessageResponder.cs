@@ -31,7 +31,7 @@ public class MessageResponder : IResponder<IMessageCreate>
         if (!firstChar.Equals(_prefix))
             return Result.FromSuccess();
 
-        await _messageProcessing.ProcessMessageAsync(gatewayEvent.ChannelID, content, ct);
+        await _messageProcessing.ProcessMessageAsync(gatewayEvent.ChannelID, gatewayEvent.ID, content, ct);
         return Result.FromSuccess();
     }
 }

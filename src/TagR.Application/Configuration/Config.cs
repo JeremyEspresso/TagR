@@ -17,6 +17,7 @@ public class Config : IConfig
             {
                 Token = Environment.GetEnvironmentVariable("DISCORD_TOKEN")!,
                 CommandPrefix = Environment.GetEnvironmentVariable("DISCORD_COMMAND_PREFIX")!,
+                ModeratorRoleId = ulong.Parse(Environment.GetEnvironmentVariable("DISCORD_MODERATOR_ROLE_ID")!),
             },
             Database = new DatabaseConfiguration
             {
