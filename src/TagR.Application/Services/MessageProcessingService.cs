@@ -22,7 +22,6 @@ public class MessageProcessingService : IMessageProcessingService
     {
         var content = StripPrefix(messageContent);
 
-        // TODO: Use TagService.GetMessageByName
         var getTag = await _tagService.GetTagByName(content);
         if (!getTag.IsDefined(out var tag))
         {
