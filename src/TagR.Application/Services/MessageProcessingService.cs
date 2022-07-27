@@ -1,7 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Remora.Rest.Core;
+﻿using Remora.Rest.Core;
 using TagR.Application.Services.Abstractions;
-using TagR.Database;
 
 namespace TagR.Application.Services;
 
