@@ -12,6 +12,7 @@ public static class ServiceCollectionExtensions
         serviceCollection.AddSingleton<IClock, Clock>();
 
         serviceCollection.AddScoped<ITagService, TagService>();
+        serviceCollection.AddScoped<IAuditLogger, AuditLogger>();
         return serviceCollection;
     }
 

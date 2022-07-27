@@ -5,7 +5,7 @@ using TagR.Domain;
 
 namespace TagR.Application.Services;
 
-public class AuditLogger
+public class AuditLogger : IAuditLogger
 {
     private readonly TagRDbContext _context;
     private readonly IClock _clock;
