@@ -16,23 +16,25 @@ public class MessageProcessingService : IMessageProcessingService
         _logger = logger;
     }
 
-    public async Task ProcessMessageAsync(Snowflake channelId, string messageContent, CancellationToken ct = default)
+    public async Task ProcessMessageAsync(Snowflake channelId, Snowflake messageId, string messageContent, CancellationToken ct = default)
     {
+        _logger.LogInformation("Start processing message id: {messageId} ", messageId);
+        
         var content = StripPrefix(messageContent);
 
         var getTag = await _tagService.GetTagByName(content);
-        if (!getTag.IsDefined(out var tag))
-        {
-            await _messageService.CreateMessageAsync(channelId, "Tag not found", ct);
-            return;
-        }
 
-        await _messageService.CreateMessageAsync(channelId, tag.Content, ct);
+        var tagDefined = getTag.IsDefined(out var tag);
+        await _messageService.CreateMessageAsync(channelId, tagDefined ? tag!.Content : TagNotFoundText, ct);
+        
+        _logger.LogInformation("End processing message id: {messageId} ", messageId);
     }
 
     private string StripPrefix(string messageContent)
     {
         return messageContent[1..];
     }
+
+    private const string TagNotFoundText = "Tag not found";
 }
 
