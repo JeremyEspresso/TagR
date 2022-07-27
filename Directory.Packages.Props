@@ -1,5 +1,0 @@
-<Project>
-	<ItemGroup>
-    	<PackageReference Include="Remora.Discord" Version="2022.45.0" />
-  	</ItemGroup>
-</Project>
