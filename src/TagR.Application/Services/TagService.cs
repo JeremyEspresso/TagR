@@ -11,10 +11,12 @@ namespace TagR.Application.Services;
 public class TagService : ITagService
 {
     private readonly TagRDbContext _context;
+    private readonly IClock _clock;
 
-    public TagService(TagRDbContext context)
+    public TagService(TagRDbContext context, IClock clock)
     {
         _context = context;
+        _clock = clock;
     }
 
     public async Task<Result<Tag>> CreateTagAsync(string tagName, string content, Snowflake actorId, CancellationToken ct = default)
@@ -24,6 +26,7 @@ public class TagService : ITagService
             Name = tagName,
             Content = content,
             OwnerDiscordSnowflake = actorId,
+            CreatedAtUtc = _clock.UtcNow,
         };
 
         var getTag = await GetTagByName(tagName, ct);
