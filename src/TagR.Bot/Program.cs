@@ -20,6 +20,7 @@ hostBuilder
                 services.AddSingleton(config);
                 services.Configure<DiscordGatewayClientOptions>(g => g.Intents |= GatewayIntents.MessageContents);
                 services.AddResponders();
+                services.AddCommandGroups(config);
                 services.AddApplication(config);
                 services.AddDatabase(config);
     });
