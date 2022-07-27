@@ -7,13 +7,13 @@ namespace TagR.Application.Services;
 
 public class MessageProcessingService : IMessageProcessingService
 {
-    private readonly TagRDbContext _context;
+    private readonly ITagService _tagService;
     private readonly IDiscordMessageService _messageService;
     private readonly ILogger<MessageProcessingService> _logger;
 
-    public MessageProcessingService(TagRDbContext context, IDiscordMessageService messageService, ILogger<MessageProcessingService> logger)
+    public MessageProcessingService(ITagService tagService, IDiscordMessageService messageService, ILogger<MessageProcessingService> logger)
     {
-        _context = context;
+        _tagService = tagService;
         _messageService = messageService;
         _logger = logger;
     }
@@ -23,8 +23,8 @@ public class MessageProcessingService : IMessageProcessingService
         var content = StripPrefix(messageContent);
 
         // TODO: Use TagService.GetMessageByName
-        var tag = await _context.Tags.FirstOrDefaultAsync(t => t.Name == content, ct);
-        if (tag is null)
+        var getTag = await _tagService.GetTagByName(content);
+        if (!getTag.IsDefined(out var tag))
         {
             await _messageService.CreateMessageAsync(channelId, "Tag not found", ct);
             return;
