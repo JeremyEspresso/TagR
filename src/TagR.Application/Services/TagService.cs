@@ -5,17 +5,20 @@ using TagR.Database;
 using TagR.Domain;
 using TagR.Application.ResultErrors;
 using TagR.Application.Services.Abstractions;
+using TagR.Application.Entities.Auditing;
 
 namespace TagR.Application.Services;
 
 public class TagService : ITagService
 {
     private readonly TagRDbContext _context;
+    private readonly IAuditLogger _auditLogger;
     private readonly IClock _clock;
 
-    public TagService(TagRDbContext context, IClock clock)
+    public TagService(TagRDbContext context, IAuditLogger auditLogger, IClock clock)
     {
         _context = context;
+        _auditLogger = auditLogger;
         _clock = clock;
     }
 
@@ -38,6 +41,15 @@ public class TagService : ITagService
         _context.Tags.Add(newTag);
         await _context.SaveChangesAsync(ct);
 
+        await _auditLogger.Log
+            (
+                new TagCreatedEvent
+                (
+                  newTag.Id,
+                  actorId
+                )
+            );
+
         return newTag;
     }
 
@@ -59,6 +71,15 @@ public class TagService : ITagService
         _context.Tags.Update(tag);
         await _context.SaveChangesAsync(ct);
 
+        await _auditLogger.Log
+        (
+            new TagUpdatedEvent
+            (
+              tag.Id,
+              actorId
+            )
+        );
+
         return tag;
     }
 
@@ -77,6 +98,17 @@ public class TagService : ITagService
 
         _context.Tags.Remove(tag);
         await _context.SaveChangesAsync(ct);
+
+        await _auditLogger.Log
+        (
+            new TagDeletedEvent
+            (
+              tag.Id,
+              actorId,
+              tag.Name,
+              tag.Content
+            )
+        );
 
         return Result.FromSuccess();
     }
@@ -98,6 +130,15 @@ public class TagService : ITagService
         _context.Tags.Update(tag);
         await _context.SaveChangesAsync(ct);
 
+        await _auditLogger.Log
+        (
+            new TagEnabledEvent
+            (
+              tag.Id,
+              actorId
+            )
+        );
+
         return Result.FromSuccess();
     }
 
@@ -117,6 +158,15 @@ public class TagService : ITagService
         tag.Disabled = true;
         _context.Tags.Update(tag);
         await _context.SaveChangesAsync(ct);
+
+        await _auditLogger.Log
+        (
+            new TagDisabledEvent
+            (
+              tag.Id,
+              actorId
+            )
+        );
 
         return Result.FromSuccess();
     }
