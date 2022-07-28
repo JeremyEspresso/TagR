@@ -18,5 +18,5 @@ public interface ITagService
 
     Task<Result> IncrementTagUseAsync(Tag tag, CancellationToken ct = default);
 
-    Task<Optional<Tag>> GetTagByName(string tagName, CancellationToken ct = default);
+    Task<Optional<Tag>> GetTagByNameAsync(string tagName, CancellationToken ct = default);
 }
