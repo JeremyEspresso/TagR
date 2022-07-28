@@ -12,8 +12,8 @@ using TagR.Database;
 namespace TagR.Database.Migrations
 {
     [DbContext(typeof(TagRDbContext))]
-    [Migration("20220725221736_audit log details nullable")]
-    partial class auditlogdetailsnullable
+    [Migration("20220728220212_InitialMigration")]
+    partial class InitialMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

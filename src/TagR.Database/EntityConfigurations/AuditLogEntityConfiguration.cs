@@ -13,6 +13,10 @@ public class AuditLogEntityConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id)
             .HasDefaultValueSql("gen_random_uuid()");
+
+        builder.HasOne(t => t.Tag)
+            .WithMany(t => t.AuditLogs)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
 
