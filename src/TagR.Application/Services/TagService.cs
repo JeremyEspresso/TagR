@@ -5,17 +5,20 @@ using TagR.Database;
 using TagR.Domain;
 using TagR.Application.ResultErrors;
 using TagR.Application.Services.Abstractions;
+using TagR.Application.Entities.Auditing;
 
 namespace TagR.Application.Services;
 
 public class TagService : ITagService
 {
     private readonly TagRDbContext _context;
+    private readonly IAuditLogger _auditLogger;
     private readonly IClock _clock;
 
-    public TagService(TagRDbContext context, IClock clock)
+    public TagService(TagRDbContext context, IAuditLogger auditLogger, IClock clock)
     {
         _context = context;
+        _auditLogger = auditLogger;
         _clock = clock;
     }
 
@@ -29,7 +32,7 @@ public class TagService : ITagService
             CreatedAtUtc = _clock.UtcNow,
         };
 
-        var getTag = await GetTagByName(tagName, ct);
+        var getTag = await GetTagByNameAsync(tagName, ct);
         if(getTag.IsDefined(out var _))
         {
             return Result<Tag>.FromError(new TagExistsError());
@@ -38,12 +41,21 @@ public class TagService : ITagService
         _context.Tags.Add(newTag);
         await _context.SaveChangesAsync(ct);
 
+        await _auditLogger.Log
+            (
+                new TagCreatedEvent
+                (
+                  newTag.Id,
+                  actorId
+                )
+            );
+
         return newTag;
     }
 
     public async Task<Result<Tag>> UpdateTagAsync(string tagName, string newContent, Snowflake actorId, bool isMod, CancellationToken ct = default)
     {
-        var getTag = await GetTagByName(tagName, ct);
+        var getTag = await GetTagByNameAsync(tagName, ct);
         if (!getTag.IsDefined(out var tag))
         {
             return Result<Tag>.FromError(new TagNotFoundError());
@@ -59,12 +71,21 @@ public class TagService : ITagService
         _context.Tags.Update(tag);
         await _context.SaveChangesAsync(ct);
 
+        await _auditLogger.Log
+        (
+            new TagUpdatedEvent
+            (
+              tag.Id,
+              actorId
+            )
+        );
+
         return tag;
     }
 
     public async Task<Result> DeleteTagAsync(string tagName, Snowflake actorId, bool isMod, CancellationToken ct = default)
     {
-        var getTag = await GetTagByName(tagName, ct);
+        var getTag = await GetTagByNameAsync(tagName, ct);
         if (!getTag.IsDefined(out var tag))
         {
             return Result.FromError(new TagNotFoundError());
@@ -78,12 +99,23 @@ public class TagService : ITagService
         _context.Tags.Remove(tag);
         await _context.SaveChangesAsync(ct);
 
+        await _auditLogger.Log
+        (
+            new TagDeletedEvent
+            (
+              tag.Id,
+              actorId,
+              tag.Name,
+              tag.Content
+            )
+        );
+
         return Result.FromSuccess();
     }
 
     public async Task<Result> EnableTagAsync(string tagName, Snowflake actorId, bool isMod, CancellationToken ct = default)
     {
-        var getTag = await GetTagByName(tagName, ct);
+        var getTag = await GetTagByNameAsync(tagName, ct);
         if (!getTag.IsDefined(out var tag))
         {
             return Result.FromError(new TagNotFoundError());
@@ -98,12 +130,21 @@ public class TagService : ITagService
         _context.Tags.Update(tag);
         await _context.SaveChangesAsync(ct);
 
+        await _auditLogger.Log
+        (
+            new TagEnabledEvent
+            (
+              tag.Id,
+              actorId
+            )
+        );
+
         return Result.FromSuccess();
     }
 
     public async Task<Result> DisableTagAsync(string tagName, Snowflake actorId, bool isMod, CancellationToken ct = default)
     {
-        var getTag = await GetTagByName(tagName, ct);
+        var getTag = await GetTagByNameAsync(tagName, ct);
         if (!getTag.IsDefined(out var tag))
         {
             return Result.FromError(new TagNotFoundError());
@@ -118,6 +159,15 @@ public class TagService : ITagService
         _context.Tags.Update(tag);
         await _context.SaveChangesAsync(ct);
 
+        await _auditLogger.Log
+        (
+            new TagDisabledEvent
+            (
+              tag.Id,
+              actorId
+            )
+        );
+
         return Result.FromSuccess();
     }
 
@@ -131,8 +181,8 @@ public class TagService : ITagService
         return Result.FromSuccess();
     }
 
-    public async Task<Optional<Tag>> GetTagByName(string tagName, CancellationToken ct = default)
+    public async Task<Optional<Tag>> GetTagByNameAsync(string tagName, CancellationToken ct = default)
     {
-        return (await _context.Tags.FirstOrDefaultAsync(t => t.Name == tagName, ct))!;
+        return (await _context.Tags.Include(t => t.AuditLogs).FirstOrDefaultAsync(t => t.Name == tagName, ct))!;
     }
 }

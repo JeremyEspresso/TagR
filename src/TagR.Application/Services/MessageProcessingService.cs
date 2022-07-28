@@ -37,11 +37,12 @@ public class MessageProcessingService : IMessageProcessingService
         if (_commandGroupNames.Any(c => content.StartsWith(c.Key)))
             return;
 
-        var getTag = await _tagService.GetTagByName(content);
+        var getTag = await _tagService.GetTagByNameAsync(content);
 
         if (!getTag.IsDefined(out var tag))
         {
             await _messageService.CreateMessageAsync(channelId, TagNotFoundText, ct);
+            return;
         }
 
         if (tag!.Disabled)

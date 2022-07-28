@@ -7,7 +7,7 @@ public record TagCreatedEvent(int tagId, Snowflake actor) : AuditEvent(TagAuditL
 
 public record TagUpdatedEvent(int tagId, Snowflake actor) : AuditEvent(TagAuditLogAction.Update, tagId, actor);
 
-public record TagDeletedEvent(int tagId, Snowflake actor) : AuditEvent(TagAuditLogAction.Delete, tagId, actor);
+public record TagDeletedEvent(int tagId, Snowflake actor, string tagName, string tagContent) : AuditEvent(TagAuditLogAction.Delete, tagId, actor);
 
 public record TagEnabledEvent(int tagId, Snowflake actor) : AuditEvent(TagAuditLogAction.Enable, tagId, actor);
 

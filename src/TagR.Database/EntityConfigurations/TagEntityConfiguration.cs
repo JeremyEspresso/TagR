@@ -13,10 +13,5 @@ public class TagEntityConfiguration : IEntityTypeConfiguration<Tag>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id)
             .ValueGeneratedOnAdd();
-
-        builder.HasMany(x => x.AuditLogs)
-            .WithOne(x => x.Tag)
-            .HasForeignKey(x => x.TagId)
-            .OnDelete(DeleteBehavior.SetNull);
     }
 }

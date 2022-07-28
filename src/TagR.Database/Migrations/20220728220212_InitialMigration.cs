@@ -36,7 +36,7 @@ namespace TagR.Database.Migrations
                     tag_id = table.Column<int>(type: "integer", nullable: false),
                     action_type = table.Column<string>(type: "text", nullable: false),
                     actor = table.Column<long>(type: "bigint", nullable: false),
-                    details = table.Column<string>(type: "text", nullable: false),
+                    details = table.Column<string>(type: "text", nullable: true),
                     timestamp_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>

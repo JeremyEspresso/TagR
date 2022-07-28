@@ -20,8 +20,9 @@ public class AuditLogger : IAuditLogger
         where TEvent : AuditEvent
             => auditEvent switch
             {
-                TagAliasedEvent tae => Log(tae),
-                TagCreatedAliasEvent tcae => Log(tcae),
+                TagAliasedEvent tae => Log(tae, ct),
+                TagCreatedAliasEvent tcae => Log(tcae, ct),
+                TagDeletedEvent tde => Log(tde, ct),
                 _ => InsertSimpleAuditLog(auditEvent, ct)
             };
 
@@ -49,6 +50,21 @@ public class AuditLogger : IAuditLogger
             ActionType = auditEvent.AuditAction,
             Actor = auditEvent.Actor,
             Details = $"Orginal tag ID: {auditEvent.originalTagId}"
+        };
+
+        _context.AuditLogs.Add(auditLog);
+        return _context.SaveChangesAsync(ct);
+    }
+
+    private Task Log(TagDeletedEvent auditEvent, CancellationToken ct = default)
+    {
+        var auditLog = new AuditLog
+        {
+            TimestampUtc = _clock.UtcNow,
+            TagId = auditEvent.TagId,
+            ActionType = auditEvent.AuditAction,
+            Actor = auditEvent.Actor,
+            Details = $"Tag Name: {auditEvent.tagName} - Content: {auditEvent.tagContent}"
         };
 
         _context.AuditLogs.Add(auditLog);
