@@ -42,6 +42,7 @@ public class MessageProcessingService : IMessageProcessingService
         if (!getTag.IsDefined(out var tag))
         {
             await _messageService.CreateMessageAsync(channelId, TagNotFoundText, ct);
+            return;
         }
 
         if (tag!.Disabled)
