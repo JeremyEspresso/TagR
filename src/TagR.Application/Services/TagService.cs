@@ -76,7 +76,9 @@ public class TagService : ITagService
             new TagUpdatedEvent
             (
               tag.Id,
-              actorId
+              actorId,
+              oldContent,
+              newContent
             )
         );
 
