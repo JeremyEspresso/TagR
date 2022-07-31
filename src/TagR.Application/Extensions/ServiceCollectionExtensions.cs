@@ -13,6 +13,7 @@ public static class ServiceCollectionExtensions
 
         serviceCollection.AddScoped<ITagService, TagService>();
         serviceCollection.AddScoped<IAuditLogger, AuditLogger>();
+        serviceCollection.AddScoped<IModService, ModService>();
         return serviceCollection;
     }
 

@@ -13,5 +13,11 @@ public class TagEntityConfiguration : IEntityTypeConfiguration<Tag>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id)
             .ValueGeneratedOnAdd();
+
+        builder.HasIndex(x => x.Name)
+            .IsUnique();
+
+        builder.HasIndex(x => x.Content)
+            .IsUnique();
     }
 }
