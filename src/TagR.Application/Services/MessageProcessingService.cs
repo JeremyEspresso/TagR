@@ -1,5 +1,7 @@
 ﻿using Remora.Commands.Services;
 using Remora.Commands.Trees.Nodes;
+using Remora.Discord.API.Abstractions.Objects;
+using Remora.Discord.API.Objects;
 using Remora.Rest.Core;
 using TagR.Application.Services.Abstractions;
 
@@ -28,7 +30,7 @@ public class MessageProcessingService : IMessageProcessingService
         _commandGroupNames = GetCommandGroups(commandService);
     }
 
-    public async Task ProcessMessageAsync(Snowflake channelId, Snowflake messageId, string messageContent, CancellationToken ct = default)
+    public async Task ProcessMessageAsync(Snowflake channelId, Snowflake messageId, string messageContent, Optional<IMessageReference> referencedMessage, CancellationToken ct = default)
     {
         _logger.LogInformation("Processing message id: {messageId} ", messageId);
 
@@ -41,14 +43,21 @@ public class MessageProcessingService : IMessageProcessingService
 
         if (!getTag.IsDefined(out var tag))
         {
-            await _messageService.CreateMessageAsync(channelId, TagNotFoundText, ct);
+            await _messageService.CreateMessageAsync(channelId, TagNotFoundText, new MessageReference(messageId, channelId), true, ct);
             return;
         }
 
         if (tag!.Disabled)
             return;
 
-        await _messageService.CreateMessageAsync(channelId, tag!.Content, ct);
+        var msgRef = new MessageReference(messageId, channelId, default, false);
+
+        if (referencedMessage.IsDefined(out var reference))
+        {
+            msgRef = new MessageReference(reference.MessageID, reference.ChannelID, reference.GuildID, false);
+        }
+
+        await _messageService.CreateMessageAsync(channelId, tag!.Content, msgRef, false, ct);
         await _tagService.IncrementTagUseAsync(tag, ct);
     }
 
