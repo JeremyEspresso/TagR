@@ -3,6 +3,7 @@ using Remora.Discord.Commands.Extensions;
 using Remora.Discord.Commands.Responders;
 using Remora.Discord.Gateway.Extensions;
 using TagR.Bot.Commands.Text;
+using TagR.Bot.Commands.Text.Moderation;
 using TagR.Bot.Responders;
 
 namespace TagR.Bot.Extensions;
@@ -26,6 +27,7 @@ public static class ServiceCollectionExtensions
         });
         serviceCollection.AddCommandTree()
             .WithCommandGroup<TagCommandGroup>()
+            .WithCommandGroup<ModCommandGroup>()
             .Finish();
 
         return serviceCollection;
