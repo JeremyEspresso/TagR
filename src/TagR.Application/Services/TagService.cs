@@ -32,10 +32,16 @@ public class TagService : ITagService
             CreatedAtUtc = _clock.UtcNow,
         };
 
-        var getTag = await GetTagByNameAsync(tagName, ct);
-        if(getTag.IsDefined(out var _))
+        var getTagByName = await GetTagByNameAsync(tagName, ct);
+        if(getTagByName.IsDefined(out var _))
         {
-            return Result<Tag>.FromError(new TagExistsError());
+            return Result<Tag>.FromError(new TagWithNameExistsError());
+        }
+
+        var getTagByContent = await GetTagByContentAsync(content, ct);
+        if (getTagByContent.IsDefined(out var t))
+        {
+            return Result<Tag>.FromError(new TagWithContentExistsError(t.Name));
         }
 
         _context.Tags.Add(newTag);
@@ -65,6 +71,14 @@ public class TagService : ITagService
         {
             return Result<Tag>.FromError(new TagNotOwnedByYouError());
         }
+
+        var getTagByContent = await GetTagByContentAsync(newContent, ct);
+        if (getTagByContent.IsDefined(out var t))
+        {
+            return Result<Tag>.FromError(new TagEditedWithContentExistsError(t.Name));
+        }
+
+        var oldContent = tag.Content;
 
         tag.Content = newContent;
         
@@ -186,5 +200,10 @@ public class TagService : ITagService
     public async Task<Optional<Tag>> GetTagByNameAsync(string tagName, CancellationToken ct = default)
     {
         return (await _context.Tags.Include(t => t.AuditLogs).FirstOrDefaultAsync(t => t.Name == tagName, ct))!;
+    }
+
+    private async Task<Optional<Tag>> GetTagByContentAsync(string content, CancellationToken ct = default)
+    {
+        return (await _context.Tags.Include(t => t.AuditLogs).FirstOrDefaultAsync(t => t.Content == content, ct))!;
     }
 }
