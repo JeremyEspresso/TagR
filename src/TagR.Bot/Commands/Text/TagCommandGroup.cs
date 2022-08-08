@@ -4,6 +4,7 @@ using Remora.Discord.API.Objects;
 using Remora.Discord.Commands.Contexts;
 using Remora.Results;
 using TagR.Application.Services.Abstractions;
+using TagR.Bot.Commands.Conditions.Attributes;
 
 namespace TagR.Bot.Commands.Text;
 
@@ -105,7 +106,7 @@ public class TagCommandGroup : CommandGroup
         return Result.FromSuccess();
     }
 
-    // TODO Mod only
+    [RequireModerator]
     [Command("enable")]
     public async Task<IResult> Enable(string tagName)
     {
@@ -131,7 +132,7 @@ public class TagCommandGroup : CommandGroup
         return Result.FromSuccess();
     }
 
-    // TODO Mod only
+    [RequireModerator]
     [Command("disable")]
     public async Task<IResult> Disable(string tagName)
     {
