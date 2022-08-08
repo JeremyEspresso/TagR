@@ -54,12 +54,11 @@ public class TagCommandGroup : CommandGroup
 
         return Result.FromSuccess();
     }
-
-    // TODO TagOwner or Mod
+    
     [Command("edit")]
     public async Task<IResult> Edit(string tagName, [Greedy] string newContent)
     {
-        var tagCreate = await _tagService.UpdateTagAsync(tagName, newContent, _ctx.User.ID, /*TODO*/true, CancellationToken);
+        var tagCreate = await _tagService.UpdateTagAsync(tagName, newContent, _ctx.User.ID, CancellationToken);
         await _messageService.CreateMessageAsync
             (
                 _ctx.ChannelID,
@@ -79,12 +78,11 @@ public class TagCommandGroup : CommandGroup
 
         return Result.FromSuccess();
     }
-
-    // TODO TagOwner or Mod
+    
     [Command("delete")]
     public async Task<IResult> Delete(string tagName)
     {
-        var tagDelete = await _tagService.DeleteTagAsync(tagName, _ctx.User.ID, /*TODO*/true, CancellationToken);
+        var tagDelete = await _tagService.DeleteTagAsync(tagName, _ctx.User.ID, CancellationToken);
 
         await _messageService.CreateMessageAsync
             (
@@ -110,7 +108,7 @@ public class TagCommandGroup : CommandGroup
     [Command("enable")]
     public async Task<IResult> Enable(string tagName)
     {
-        var tagDelete = await _tagService.EnableTagAsync(tagName, _ctx.User.ID, /*TODO*/true, CancellationToken);
+        var tagDelete = await _tagService.EnableTagAsync(tagName, _ctx.User.ID, CancellationToken);
 
         await _messageService.CreateMessageAsync
             (
@@ -136,7 +134,7 @@ public class TagCommandGroup : CommandGroup
     [Command("disable")]
     public async Task<IResult> Disable(string tagName)
     {
-        var tagDelete = await _tagService.DisableTagAsync(tagName, _ctx.User.ID, /*TODO*/true, CancellationToken);
+        var tagDelete = await _tagService.DisableTagAsync(tagName, _ctx.User.ID, CancellationToken);
 
         await _messageService.CreateMessageAsync
             (

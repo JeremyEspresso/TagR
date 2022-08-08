@@ -14,16 +14,24 @@ public class TagService : ITagService
     private readonly TagRDbContext _context;
     private readonly IAuditLogger _auditLogger;
     private readonly IClock _clock;
+    private readonly IPermissionService _permissionService;
 
-    public TagService(TagRDbContext context, IAuditLogger auditLogger, IClock clock)
+    public TagService(TagRDbContext context, IAuditLogger auditLogger, IClock clock, IPermissionService permissionService)
     {
         _context = context;
         _auditLogger = auditLogger;
         _clock = clock;
+        _permissionService = permissionService;
     }
 
     public async Task<Result<Tag>> CreateTagAsync(string tagName, string content, Snowflake actorId, CancellationToken ct = default)
     {
+        var blocked = await CheckBlockedStatusAsync(actorId, ct);
+        if (!blocked.IsSuccess)
+        {
+            return Result<Tag>.FromError(blocked.Error);
+        }
+        
         var newTag = new Tag
         {
             Name = tagName,
@@ -59,14 +67,22 @@ public class TagService : ITagService
         return newTag;
     }
 
-    public async Task<Result<Tag>> UpdateTagAsync(string tagName, string newContent, Snowflake actorId, bool isMod, CancellationToken ct = default)
+    public async Task<Result<Tag>> UpdateTagAsync(string tagName, string newContent, Snowflake actorId, CancellationToken ct = default)
     {
+        var blocked = await CheckBlockedStatusAsync(actorId, ct);
+        if (!blocked.IsSuccess)
+        {
+            return Result<Tag>.FromError(blocked.Error);
+        }
+        
         var getTag = await GetTagByNameAsync(tagName, ct);
         if (!getTag.IsDefined(out var tag))
         {
             return Result<Tag>.FromError(new TagNotFoundError());
         }
 
+        var isMod = (await _permissionService.IsModerator(actorId, ct)).IsSuccess;
+        
         if (!isMod && tag.OwnerDiscordSnowflake != actorId)
         {
             return Result<Tag>.FromError(new TagNotOwnedByYouError());
@@ -93,20 +109,29 @@ public class TagService : ITagService
               actorId,
               oldContent,
               newContent
-            )
+            ),
+            ct
         );
 
         return tag;
     }
 
-    public async Task<Result> DeleteTagAsync(string tagName, Snowflake actorId, bool isMod, CancellationToken ct = default)
+    public async Task<Result> DeleteTagAsync(string tagName, Snowflake actorId, CancellationToken ct = default)
     {
+        var blocked = await CheckBlockedStatusAsync(actorId, ct);
+        if (!blocked.IsSuccess)
+        {
+            return Result.FromError(blocked.Error);
+        }
+        
         var getTag = await GetTagByNameAsync(tagName, ct);
         if (!getTag.IsDefined(out var tag))
         {
             return Result.FromError(new TagNotFoundError());
         }
-
+        
+        var isMod = (await _permissionService.IsModerator(actorId, ct)).IsSuccess;
+        
         if (!isMod && tag.OwnerDiscordSnowflake != actorId)
         {
             return Result.FromError(new TagNotOwnedByYouError());
@@ -123,19 +148,22 @@ public class TagService : ITagService
               actorId,
               tag.Name,
               tag.Content
-            )
+            ),
+            ct
         );
 
         return Result.FromSuccess();
     }
 
-    public async Task<Result> EnableTagAsync(string tagName, Snowflake actorId, bool isMod, CancellationToken ct = default)
+    public async Task<Result> EnableTagAsync(string tagName, Snowflake actorId, CancellationToken ct = default)
     {
         var getTag = await GetTagByNameAsync(tagName, ct);
         if (!getTag.IsDefined(out var tag))
         {
             return Result.FromError(new TagNotFoundError());
         }
+        
+        var isMod = (await _permissionService.IsModerator(actorId, ct)).IsSuccess;
 
         if (!isMod)
         {
@@ -152,19 +180,22 @@ public class TagService : ITagService
             (
               tag.Id,
               actorId
-            )
+            ),
+            ct
         );
 
         return Result.FromSuccess();
     }
 
-    public async Task<Result> DisableTagAsync(string tagName, Snowflake actorId, bool isMod, CancellationToken ct = default)
+    public async Task<Result> DisableTagAsync(string tagName, Snowflake actorId, CancellationToken ct = default)
     {
         var getTag = await GetTagByNameAsync(tagName, ct);
         if (!getTag.IsDefined(out var tag))
         {
             return Result.FromError(new TagNotFoundError());
         }
+        
+        var isMod = (await _permissionService.IsModerator(actorId, ct)).IsSuccess;
 
         if (!isMod)
         {
@@ -181,7 +212,8 @@ public class TagService : ITagService
             (
               tag.Id,
               actorId
-            )
+            ),
+            ct
         );
 
         return Result.FromSuccess();
@@ -205,5 +237,14 @@ public class TagService : ITagService
     private async Task<Optional<Tag>> GetTagByContentAsync(string content, CancellationToken ct = default)
     {
         return (await _context.Tags.Include(t => t.AuditLogs).FirstOrDefaultAsync(t => t.Content == content, ct))!;
+    }
+
+    private async Task<Result> CheckBlockedStatusAsync(Snowflake actor, CancellationToken ct = default)
+    {
+        var blockedUser = await _context.BlockedUsers.FirstOrDefaultAsync(bu => bu.UserSnowflake == actor, ct);
+
+        return blockedUser is not null 
+            ? Result.FromError(new MessageError("You are blocked from creating new tags.")) 
+            : Result.FromSuccess();
     }
 }
