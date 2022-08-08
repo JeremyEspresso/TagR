@@ -4,10 +4,6 @@ using Remora.Discord.Hosting.Extensions;
 using TagR.Bot.Extensions;
 using Remora.Discord.API.Abstractions.Gateway.Commands;
 using Remora.Discord.Gateway;
-using Microsoft.Extensions.DependencyInjection;
-using TagR.Bot.Responders;
-using Remora.Discord.Gateway.Extensions;
-using Remora.Discord.Rest.Extensions;
 
 var config = Config.Get();
 var hostBuilder = Host.CreateDefaultBuilder(args);

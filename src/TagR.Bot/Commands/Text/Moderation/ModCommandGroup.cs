@@ -6,6 +6,7 @@ using Remora.Discord.Commands.Contexts;
 using Remora.Results;
 using TagR.Application.ResultErrors;
 using TagR.Application.Services.Abstractions;
+using TagR.Bot.Commands.Conditions.Attributes;
 
 namespace TagR.Bot.Commands.Text.Moderation;
 
@@ -23,20 +24,28 @@ public class ModCommandGroup : CommandGroup
         _messageService = messageService;
     }
 
-    // Mod only
+    [RequireModerator]
     [Command("block", "incapacitate")]
     public async Task<IResult> Block(IUser user, [Greedy] string? reason = default)
     {
-        var blockUser = await _modService.BlockUserAsync(user.ID, reason, CancellationToken);
+        var blockUser = await _modService.BlockUserAsync(user.ID, reason, _ctx.User.ID, CancellationToken);
 
-        string content;
+        var content = string.Empty;
 
         if (!blockUser.IsSuccess)
         {
-            var userAlreadyBlocked = blockUser.Error as UserIsAlreadyBlockedError;
-            var bu = userAlreadyBlocked!.BlockedUser;
-
-            content = $"User `{user.ID}` was already blocked at `{bu.BlockedAtUtc}`. Reason: `{bu.Reason ?? "Not specified."}`";
+	        switch (blockUser.Error)
+	        {
+		        case UserIsAlreadyBlockedError userAlreadyBlocked:
+		        {
+			        var bu = userAlreadyBlocked!.BlockedUser;
+			        content = $"User `{user.ID}` was already blocked at `{bu.BlockedAtUtc}`. Reason: `{bu.Reason ?? "Not specified."}`";
+			        break;
+		        }
+		        case UnableToBlockSelfError ube:
+			        content = ube.Message;
+			        break;
+	        }
         }
         else
         {
@@ -61,11 +70,11 @@ public class ModCommandGroup : CommandGroup
         return Result.FromSuccess();
     }
 
-    // Mod only
+    [RequireModerator]
     [Command("unblock")]
     public async Task<IResult> Unblock(IUser user)
     {
-        var unblockUser = await _modService.UnblockUserAsync(user.ID, CancellationToken);
+        var unblockUser = await _modService.UnblockUserAsync(user.ID, _ctx.User.ID, CancellationToken);
 
         await _messageService.CreateMessageAsync
             (

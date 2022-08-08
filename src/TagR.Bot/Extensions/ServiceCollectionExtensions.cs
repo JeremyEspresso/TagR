@@ -2,6 +2,7 @@
 using Remora.Discord.Commands.Extensions;
 using Remora.Discord.Commands.Responders;
 using Remora.Discord.Gateway.Extensions;
+using TagR.Bot.Commands.Conditions;
 using TagR.Bot.Commands.Text;
 using TagR.Bot.Commands.Text.Moderation;
 using TagR.Bot.Responders;
@@ -25,10 +26,14 @@ public static class ServiceCollectionExtensions
         {
             opt.Prefix = config.Discord.CommandPrefix;
         });
+
+        serviceCollection.AddCondition<RequireModeratorCondition>();
+
         serviceCollection.AddCommandTree()
             .WithCommandGroup<TagCommandGroup>()
             .WithCommandGroup<ModCommandGroup>()
             .Finish();
+
 
         return serviceCollection;
     }

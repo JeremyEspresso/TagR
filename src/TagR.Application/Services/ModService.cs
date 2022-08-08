@@ -19,8 +19,13 @@ public class ModService : IModService
         _clock = clock;
     }
 
-    public async Task<IResult> BlockUserAsync(Snowflake userId, string? reason, CancellationToken ct = default)
+    public async Task<Result> BlockUserAsync(Snowflake userId, string? reason, Snowflake actor, CancellationToken ct = default)
     {
+	    if (userId == actor)
+	    {
+		    return Result.FromError(new UnableToBlockSelfError());
+	    }
+
         var blockedUser = await GetBlockedUserBySnowflakeAsync(userId, ct);
 
         if (blockedUser.IsDefined(out var bu))
@@ -39,7 +44,7 @@ public class ModService : IModService
         return Result.FromSuccess();
     }
 
-    public async Task<IResult> UnblockUserAsync(Snowflake userId, CancellationToken ct = default)
+    public async Task<Result> UnblockUserAsync(Snowflake userId, Snowflake actor, CancellationToken ct = default)
     {
         var blockedUser = await GetBlockedUserBySnowflakeAsync(userId, ct);
 
