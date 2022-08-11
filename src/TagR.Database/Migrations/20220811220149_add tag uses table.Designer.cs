@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TagR.Database;
@@ -11,9 +12,10 @@ using TagR.Database;
 namespace TagR.Database.Migrations
 {
     [DbContext(typeof(TagRDbContext))]
-    partial class TagRDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220811220149_add tag uses table")]
+    partial class addtagusestable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -104,10 +106,6 @@ namespace TagR.Database.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("disabled");
 
-                    b.Property<bool>("Locked")
-                        .HasColumnType("boolean")
-                        .HasColumnName("locked");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
@@ -145,6 +143,10 @@ namespace TagR.Database.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("parent_id");
 
+                    b.Property<int>("Uses")
+                        .HasColumnType("integer")
+                        .HasColumnName("uses");
+
                     b.HasKey("Id")
                         .HasName("pk_tagr_aliases");
 
@@ -152,40 +154,6 @@ namespace TagR.Database.Migrations
                         .HasDatabaseName("ix_tagr_aliases_parent_id");
 
                     b.ToTable("tagr_aliases", (string)null);
-                });
-
-            modelBuilder.Entity("TagR.Domain.TagAliasUse", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<long>("ChannelSnowflake")
-                        .HasColumnType("bigint")
-                        .HasColumnName("channel_snowflake");
-
-                    b.Property<DateTime>("DateTimeUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_time_utc");
-
-                    b.Property<int>("TagAliasId")
-                        .HasColumnType("integer")
-                        .HasColumnName("tag_alias_id");
-
-                    b.Property<long>("UserSnowflake")
-                        .HasColumnType("bigint")
-                        .HasColumnName("user_snowflake");
-
-                    b.HasKey("Id")
-                        .HasName("pk_tagr_alias_uses");
-
-                    b.HasIndex("TagAliasId")
-                        .HasDatabaseName("ix_tagr_alias_uses_tag_alias_id");
-
-                    b.ToTable("tagr_alias_uses", (string)null);
                 });
 
             modelBuilder.Entity("TagR.Domain.TagRevision", b =>
@@ -287,18 +255,6 @@ namespace TagR.Database.Migrations
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("TagR.Domain.TagAliasUse", b =>
-                {
-                    b.HasOne("TagR.Domain.TagAlias", "TagAlias")
-                        .WithMany("Uses")
-                        .HasForeignKey("TagAliasId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_tagr_alias_uses_tagr_aliases_tag_alias_id");
-
-                    b.Navigation("TagAlias");
-                });
-
             modelBuilder.Entity("TagR.Domain.TagRevision", b =>
                 {
                     b.HasOne("TagR.Domain.Tag", "Tag")
@@ -331,11 +287,6 @@ namespace TagR.Database.Migrations
 
                     b.Navigation("Revisions");
 
-                    b.Navigation("Uses");
-                });
-
-            modelBuilder.Entity("TagR.Domain.TagAlias", b =>
-                {
                     b.Navigation("Uses");
                 });
 #pragma warning restore 612, 618

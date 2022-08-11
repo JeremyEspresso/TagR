@@ -23,5 +23,15 @@ public class TagEntityConfiguration : IEntityTypeConfiguration<Tag>
             .WithOne(x => x.Tag)
             .HasForeignKey(x => x.TagId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.HasMany(x => x.Aliases)
+            .WithOne(x => x.Parent)
+            .HasForeignKey(x => x.ParentId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.HasMany(x => x.Uses)
+            .WithOne(x => x.Tag)
+            .HasForeignKey(x => x.TagId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

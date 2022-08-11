@@ -44,4 +44,10 @@ public class TagRDbContext : DbContext
     public DbSet<BlockedUser> BlockedUsers { get; set; } = default!;
 
     public DbSet<TagRevision> Revisions { get; set; } = default!;
+
+    public DbSet<TagAlias> Aliases { get; set; } = default!;
+
+    public DbSet<TagUse> Uses { get; set; } = default!;
+    
+    public DbSet<TagAliasUse> AliasUses { get; set; } = default!;
 }

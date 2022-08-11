@@ -10,15 +10,19 @@ public class Tag
 
     public string Content => Revisions.Last().Content;
 
-    public ICollection<TagRevision> Revisions { get; set; } = default!;
+    public ICollection<TagRevision> Revisions { get; set; } = new List<TagRevision>();
 
     public Snowflake OwnerDiscordSnowflake { get; set; }
 
-    public int Uses { get; set; }
-
     public bool Disabled { get; set; }
+    
+    public bool Locked { get; set; }
 
     public DateTime CreatedAtUtc { get; set; }
 
-    public ICollection<AuditLog>? AuditLogs { get; set; }
+    public ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
+
+    public ICollection<TagAlias> Aliases { get; set; } = new List<TagAlias>();
+
+    public ICollection<TagUse> Uses { get; set; } = new List<TagUse>();
 }

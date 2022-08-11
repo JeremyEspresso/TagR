@@ -11,6 +11,7 @@ public class MessageProcessingService : IMessageProcessingService
 {
     private readonly ITagService _tagService;
     private readonly IDiscordMessageService _messageService;
+    private readonly IClock _clock;
     private readonly ILogger<MessageProcessingService> _logger;
 
     private readonly IReadOnlyList<IChildNode> _commandGroupNames;
@@ -19,18 +20,20 @@ public class MessageProcessingService : IMessageProcessingService
     (
         ITagService tagService,
         IDiscordMessageService messageService,
+        IClock clock,
         CommandService commandService,
         ILogger<MessageProcessingService> logger
     )
     {
         _tagService = tagService;
         _messageService = messageService;
+        _clock = clock;
         _logger = logger;
 
         _commandGroupNames = GetCommandGroups(commandService);
     }
 
-    public async Task ProcessMessageAsync(Snowflake channelId, Snowflake messageId, string messageContent, Optional<IMessageReference> referencedMessage, CancellationToken ct = default)
+    public async Task ProcessMessageAsync(Snowflake channelId, Snowflake messageId, Snowflake actorId, string messageContent, Optional<IMessageReference> referencedMessage, CancellationToken ct = default)
     {
         _logger.LogInformation("Processing message id: {messageId} ", messageId);
 
@@ -39,7 +42,7 @@ public class MessageProcessingService : IMessageProcessingService
         if (_commandGroupNames.Any(c => content.StartsWith(c.Key)))
             return;
 
-        var getTag = await _tagService.GetTagByNameAsync(content);
+        var getTag = await _tagService.GetTagByNameAsync(content, ct);
 
         if (!getTag.IsDefined(out var tag))
         {
@@ -58,15 +61,15 @@ public class MessageProcessingService : IMessageProcessingService
         }
 
         await _messageService.CreateMessageAsync(channelId, tag!.Content, msgRef, false, ct);
-        await _tagService.IncrementTagUseAsync(tag, ct);
+        await _tagService.IncrementTagUseAsync(tag, channelId, actorId, _clock.UtcNow, ct);
     }
 
-    private string StripPrefix(string messageContent)
+    private static string StripPrefix(string messageContent)
     {
         return messageContent[1..];
     }
 
-    private IReadOnlyList<IChildNode> GetCommandGroups(CommandService cmdService)
+    private static IReadOnlyList<IChildNode> GetCommandGroups(CommandService cmdService)
     {
         return cmdService.TreeAccessor.TryGetNamedTree(null, out var tree)
             ? tree.Root.Children

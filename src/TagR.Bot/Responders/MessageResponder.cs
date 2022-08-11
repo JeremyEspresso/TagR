@@ -40,7 +40,7 @@ public class MessageResponder : IResponder<IMessageCreate>
             msgRef = new MessageReference(rfr.ID, rfr.ChannelID, gatewayEvent.GuildID, false);
         }
 
-        await _messageProcessing.ProcessMessageAsync(gatewayEvent.ChannelID, gatewayEvent.ID, content, msgRef, ct);
+        await _messageProcessing.ProcessMessageAsync(gatewayEvent.ChannelID, gatewayEvent.ID, gatewayEvent.Author.ID, content, msgRef, ct);
         return Result.FromSuccess();
     }
 }

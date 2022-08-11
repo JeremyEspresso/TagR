@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TagR.Database;
@@ -11,9 +12,10 @@ using TagR.Database;
 namespace TagR.Database.Migrations
 {
     [DbContext(typeof(TagRDbContext))]
-    partial class TagRDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220811223159_add alias use")]
+    partial class addaliasuse
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -103,10 +105,6 @@ namespace TagR.Database.Migrations
                     b.Property<bool>("Disabled")
                         .HasColumnType("boolean")
                         .HasColumnName("disabled");
-
-                    b.Property<bool>("Locked")
-                        .HasColumnType("boolean")
-                        .HasColumnName("locked");
 
                     b.Property<string>("Name")
                         .IsRequired()

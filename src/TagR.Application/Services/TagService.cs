@@ -229,9 +229,16 @@ public class TagService : ITagService
         return Result.FromSuccess();
     }
 
-    public async Task<Result> IncrementTagUseAsync(Tag tag, CancellationToken ct = default)
+    public async Task<Result> IncrementTagUseAsync(Tag tag, Snowflake channelId, Snowflake userId, DateTime usedAtUtc, CancellationToken ct = default)
     {
-        tag.Uses++;
+        var tagUse = new TagUse
+        {
+            UserSnowflake = userId,
+            ChannelSnowflake = channelId,
+            DateTimeUtc = usedAtUtc
+        };
+        
+        tag.Uses.Add(tagUse);
         
         _context.Tags.Update(tag);
         await _context.SaveChangesAsync(ct);
