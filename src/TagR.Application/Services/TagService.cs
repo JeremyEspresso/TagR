@@ -249,20 +249,11 @@ public class TagService : ITagService
 
     private async Task<Optional<Tag>> GetTagByContentAsync(string content, CancellationToken ct = default)
     {
-        TagRevision x;
-        try
-        {
-            x = await _context.Revisions.Where(r => r.Content == content)
+        var x = await _context.Revisions.Where(r => r.Content == content)
                 .Include(t => t.Tag)
                 .FirstOrDefaultAsync(ct);
-        }
-        catch
-        {
-            return new Optional<Tag>(null);
-        }
         
-
-        return x?.Tag;
+        return x?.Tag!;
     }
 
     private async Task<Result> CheckBlockedStatusAsync(Snowflake actor, CancellationToken ct = default)
