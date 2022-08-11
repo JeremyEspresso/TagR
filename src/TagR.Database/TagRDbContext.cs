@@ -42,4 +42,6 @@ public class TagRDbContext : DbContext
     public DbSet<AuditLog> AuditLogs { get; set; } = default!;
 
     public DbSet<BlockedUser> BlockedUsers { get; set; } = default!;
+
+    public DbSet<TagRevision> Revisions { get; set; } = default!;
 }

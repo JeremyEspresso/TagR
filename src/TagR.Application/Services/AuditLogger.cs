@@ -80,7 +80,7 @@ public class AuditLogger : IAuditLogger
             TagId = auditEvent.TagId,
             ActionType = auditEvent.AuditAction,
             Actor = auditEvent.Actor,
-            Details = $"content: {auditEvent.oldContent} -> {auditEvent.newContent}",
+            Details = $"hash: {auditEvent.oldHash} -> {auditEvent.newHash}",
         };
 
         _context.AuditLogs.Add(auditLog);

@@ -8,7 +8,9 @@ public class Tag
 
     public string Name { get; set; } = default!;
 
-    public string Content { get; set; } = default!;
+    public string Content => Revisions.Last().Content;
+
+    public ICollection<TagRevision> Revisions { get; set; } = default!;
 
     public Snowflake OwnerDiscordSnowflake { get; set; }
 

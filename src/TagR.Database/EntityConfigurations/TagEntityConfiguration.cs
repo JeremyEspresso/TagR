@@ -17,7 +17,11 @@ public class TagEntityConfiguration : IEntityTypeConfiguration<Tag>
         builder.HasIndex(x => x.Name)
             .IsUnique();
 
-        builder.HasIndex(x => x.Content)
-            .IsUnique();
+        builder.Ignore(p => p.Content);
+
+        builder.HasMany(x => x.Revisions)
+            .WithOne(x => x.Tag)
+            .HasForeignKey(x => x.TagId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

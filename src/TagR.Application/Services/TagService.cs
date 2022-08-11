@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Remora.Rest.Core;
 using Remora.Results;
+using TagR.Application.Common.Hashing;
 using TagR.Database;
 using TagR.Domain;
 using TagR.Application.ResultErrors;
@@ -32,14 +33,6 @@ public class TagService : ITagService
             return Result<Tag>.FromError(blocked.Error);
         }
         
-        var newTag = new Tag
-        {
-            Name = tagName,
-            Content = content,
-            OwnerDiscordSnowflake = actorId,
-            CreatedAtUtc = _clock.UtcNow,
-        };
-
         var getTagByName = await GetTagByNameAsync(tagName, ct);
         if(getTagByName.IsDefined(out var _))
         {
@@ -51,6 +44,20 @@ public class TagService : ITagService
         {
             return Result<Tag>.FromError(new TagWithContentExistsError(t.Name));
         }
+
+        var timestamp = _clock.UtcNow;
+        var revision = CreateRevision(content, timestamp);
+        
+        var newTag = new Tag
+        {
+            Name = tagName,
+            Revisions = new TagRevision[]
+            {
+                revision
+            },
+            OwnerDiscordSnowflake = actorId,
+            CreatedAtUtc = timestamp,
+        };
 
         _context.Tags.Add(newTag);
         await _context.SaveChangesAsync(ct);
@@ -94,9 +101,12 @@ public class TagService : ITagService
             return Result<Tag>.FromError(new TagEditedWithContentExistsError(t.Name));
         }
 
-        var oldContent = tag.Content;
+        var previousRevision = tag.Revisions.Last();
 
-        tag.Content = newContent;
+        var timestamp = _clock.UtcNow;
+        var revision = CreateRevision(newContent, timestamp);
+        
+        tag.Revisions.Add(revision);
         
         _context.Tags.Update(tag);
         await _context.SaveChangesAsync(ct);
@@ -107,8 +117,8 @@ public class TagService : ITagService
             (
               tag.Id,
               actorId,
-              oldContent,
-              newContent
+              previousRevision.Hash,
+              revision.Hash
             ),
             ct
         );
@@ -231,12 +241,28 @@ public class TagService : ITagService
 
     public async Task<Optional<Tag>> GetTagByNameAsync(string tagName, CancellationToken ct = default)
     {
-        return (await _context.Tags.Include(t => t.AuditLogs).FirstOrDefaultAsync(t => t.Name == tagName, ct))!;
+        return (await _context.Tags
+            .Include(t => t.AuditLogs)
+            .Include(t => t.Revisions)
+            .FirstOrDefaultAsync(t => t.Name == tagName, ct))!;
     }
 
     private async Task<Optional<Tag>> GetTagByContentAsync(string content, CancellationToken ct = default)
     {
-        return (await _context.Tags.Include(t => t.AuditLogs).FirstOrDefaultAsync(t => t.Content == content, ct))!;
+        TagRevision x;
+        try
+        {
+            x = await _context.Revisions.Where(r => r.Content == content)
+                .Include(t => t.Tag)
+                .FirstOrDefaultAsync(ct);
+        }
+        catch
+        {
+            return new Optional<Tag>(null);
+        }
+        
+
+        return x?.Tag;
     }
 
     private async Task<Result> CheckBlockedStatusAsync(Snowflake actor, CancellationToken ct = default)
@@ -246,5 +272,19 @@ public class TagService : ITagService
         return blockedUser is not null 
             ? Result.FromError(new MessageError("You are blocked from creating new tags.")) 
             : Result.FromSuccess();
+    }
+
+    private TagRevision CreateRevision(string content, DateTime timestamp)
+    {
+        var contentHash = HashHelper.HashSha1($"{content}-{timestamp}");
+        var shortContentHash = contentHash[..7]; // TODO:  Add this as a constant somewhere
+        
+        return new TagRevision
+        {
+            Content = content,
+            Hash = contentHash,
+            ShortHash = shortContentHash,
+            TimestampUtc = timestamp
+        };
     }
 }
