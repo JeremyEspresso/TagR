@@ -19,7 +19,7 @@ public class ModService : IModService
         _clock = clock;
     }
 
-    public async Task<Result> BlockUserAsync(Snowflake userId, string? reason, Snowflake actor, CancellationToken ct = default)
+    public async Task<Result> BlockUserAsync(Snowflake userId, BlockedAction blockedActions, Snowflake actor, CancellationToken ct = default)
     {
 	    if (userId == actor)
 	    {
@@ -36,7 +36,7 @@ public class ModService : IModService
         _context.BlockedUsers.Add(new BlockedUser
         {
             UserSnowflake = userId,
-            Reason = reason,
+            BlockedActions = blockedActions,
             BlockedAtUtc = _clock.UtcNow
         });
         await _context.SaveChangesAsync(ct);
@@ -44,7 +44,7 @@ public class ModService : IModService
         return Result.FromSuccess();
     }
 
-    public async Task<Result> UnblockUserAsync(Snowflake userId, Snowflake actor, CancellationToken ct = default)
+    public async Task<Result> UnblockUserAsync(Snowflake userId, BlockedAction restoredActions , Snowflake actor, CancellationToken ct = default)
     {
         var blockedUser = await GetBlockedUserBySnowflakeAsync(userId, ct);
 
@@ -53,7 +53,17 @@ public class ModService : IModService
             return Result.FromError(new UserIsNotBlockedError(userId));
         }
 
-        _context.BlockedUsers.Remove(bu);
+       bu.BlockedActions &= ~restoredActions;
+
+       if (bu.BlockedActions == BlockedAction.None)
+       {
+           _context.BlockedUsers.Remove(bu);
+       }
+       else 
+       {
+          _context.BlockedUsers.Update(bu);
+       }
+
         await _context.SaveChangesAsync(ct);
 
         return Result.FromSuccess();

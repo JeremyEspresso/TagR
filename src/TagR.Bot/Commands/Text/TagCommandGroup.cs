@@ -30,7 +30,6 @@ public class TagCommandGroup : CommandGroup
         _logger = logger;
     }
 
-    // TODO Anyone who isn't blocked.
     [Command("create")]
     public async Task<IResult> Create(string tagName, [Greedy] string content)
     {

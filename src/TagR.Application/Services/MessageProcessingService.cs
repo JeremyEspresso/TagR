@@ -4,6 +4,7 @@ using Remora.Discord.API.Abstractions.Objects;
 using Remora.Discord.API.Objects;
 using Remora.Rest.Core;
 using TagR.Application.Services.Abstractions;
+using TagR.Domain.Moderation;
 
 namespace TagR.Application.Services;
 
@@ -11,6 +12,7 @@ public class MessageProcessingService : IMessageProcessingService
 {
     private readonly ITagService _tagService;
     private readonly IDiscordMessageService _messageService;
+    private readonly IPermissionService _permissionService;
     private readonly IClock _clock;
     private readonly ILogger<MessageProcessingService> _logger;
 
@@ -20,6 +22,7 @@ public class MessageProcessingService : IMessageProcessingService
     (
         ITagService tagService,
         IDiscordMessageService messageService,
+        IPermissionService permissionService,
         IClock clock,
         CommandService commandService,
         ILogger<MessageProcessingService> logger
@@ -27,6 +30,7 @@ public class MessageProcessingService : IMessageProcessingService
     {
         _tagService = tagService;
         _messageService = messageService;
+        _permissionService = permissionService;
         _clock = clock;
         _logger = logger;
 
@@ -52,6 +56,14 @@ public class MessageProcessingService : IMessageProcessingService
 
         if (tag!.Disabled)
             return;
+
+        var blocked = await _permissionService.IsActionBlockedAsync(actorId, BlockedAction.TagInvoke, ct);
+
+        if (blocked.IsSuccess)
+        {
+            // Don't waste an API call informing the user they are blocked. Vector for abuse.
+           return;
+        }
 
         var msgRef = new MessageReference(messageId, channelId, default, false);
 
