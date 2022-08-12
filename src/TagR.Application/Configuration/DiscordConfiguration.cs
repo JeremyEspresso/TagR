@@ -1,4 +1,6 @@
-﻿namespace TagR.Application.Configuration;
+﻿using Remora.Rest.Core;
+
+namespace TagR.Application.Configuration;
 
 public sealed record DiscordConfiguration
 {
@@ -6,5 +8,7 @@ public sealed record DiscordConfiguration
 
     public string CommandPrefix { get; init; }
 
-    public ulong ModeratorRoleId { get; init; }
+    public Snowflake ModeratorRoleId { get; init; }
+    
+    public Snowflake GuildId { get; init; }
 }

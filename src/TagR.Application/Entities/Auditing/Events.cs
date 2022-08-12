@@ -5,7 +5,7 @@ namespace TagR.Application.Entities.Auditing;
 
 public record TagCreatedEvent(int tagId, Snowflake actor) : AuditEvent(TagAuditLogAction.Create, tagId, actor);
 
-public record TagUpdatedEvent(int tagId, Snowflake actor) : AuditEvent(TagAuditLogAction.Update, tagId, actor);
+public record TagUpdatedEvent(int tagId, Snowflake actor, string oldHash, string newHash) : AuditEvent(TagAuditLogAction.Update, tagId, actor);
 
 public record TagDeletedEvent(int tagId, Snowflake actor, string tagName, string tagContent) : AuditEvent(TagAuditLogAction.Delete, tagId, actor);
 

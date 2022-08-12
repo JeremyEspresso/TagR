@@ -1,4 +1,6 @@
-﻿namespace TagR.Application.Configuration;
+﻿using Remora.Rest.Core;
+
+namespace TagR.Application.Configuration;
 
 public class Config : IConfig
 {
@@ -17,7 +19,8 @@ public class Config : IConfig
             {
                 Token = Environment.GetEnvironmentVariable("DISCORD_TOKEN")!,
                 CommandPrefix = Environment.GetEnvironmentVariable("DISCORD_COMMAND_PREFIX")!,
-                ModeratorRoleId = ulong.Parse(Environment.GetEnvironmentVariable("DISCORD_MODERATOR_ROLE_ID")!),
+                ModeratorRoleId = new Snowflake(ulong.Parse(Environment.GetEnvironmentVariable("DISCORD_MODERATOR_ROLE_ID")!)),
+                GuildId = new Snowflake(ulong.Parse(Environment.GetEnvironmentVariable("DISCORD_GUILD_ID")!))
             },
             Database = new DatabaseConfiguration
             {

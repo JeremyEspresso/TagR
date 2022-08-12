@@ -4,5 +4,7 @@ namespace TagR.Application.Services;
 public class Clock : IClock
 {
     public DateTime UtcNow => DateTime.UtcNow;
+
+    public DateTimeOffset DateTimeOffsetNow => DateTimeOffset.UtcNow;
 }
 

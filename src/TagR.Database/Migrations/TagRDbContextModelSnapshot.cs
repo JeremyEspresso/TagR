@@ -60,7 +60,135 @@ namespace TagR.Database.Migrations
                     b.ToTable("tagr_auditlogs", (string)null);
                 });
 
+            modelBuilder.Entity("TagR.Domain.Moderation.BlockedUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BlockedActions")
+                        .HasColumnType("integer")
+                        .HasColumnName("blocked_actions");
+
+                    b.Property<DateTime>("BlockedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("blocked_at_utc");
+
+                    b.Property<long>("UserSnowflake")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_snowflake");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tagr_blocked_users");
+
+                    b.ToTable("tagr_blocked_users", (string)null);
+                });
+
             modelBuilder.Entity("TagR.Domain.Tag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<bool>("Disabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("disabled");
+
+                    b.Property<bool>("Locked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("locked");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<long>("OwnerDiscordSnowflake")
+                        .HasColumnType("bigint")
+                        .HasColumnName("owner_discord_snowflake");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tagr_tags");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tagr_tags_name");
+
+                    b.ToTable("tagr_tags", (string)null);
+                });
+
+            modelBuilder.Entity("TagR.Domain.TagAlias", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<int>("ParentId")
+                        .HasColumnType("integer")
+                        .HasColumnName("parent_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tagr_aliases");
+
+                    b.HasIndex("ParentId")
+                        .HasDatabaseName("ix_tagr_aliases_parent_id");
+
+                    b.ToTable("tagr_aliases", (string)null);
+                });
+
+            modelBuilder.Entity("TagR.Domain.TagAliasUse", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<long>("ChannelSnowflake")
+                        .HasColumnType("bigint")
+                        .HasColumnName("channel_snowflake");
+
+                    b.Property<DateTime>("DateTimeUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_time_utc");
+
+                    b.Property<int>("TagAliasId")
+                        .HasColumnType("integer")
+                        .HasColumnName("tag_alias_id");
+
+                    b.Property<long>("UserSnowflake")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_snowflake");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tagr_alias_uses");
+
+                    b.HasIndex("TagAliasId")
+                        .HasDatabaseName("ix_tagr_alias_uses_tag_alias_id");
+
+                    b.ToTable("tagr_alias_uses", (string)null);
+                });
+
+            modelBuilder.Entity("TagR.Domain.TagRevision", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -74,31 +202,65 @@ namespace TagR.Database.Migrations
                         .HasColumnType("text")
                         .HasColumnName("content");
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at_utc");
-
-                    b.Property<bool>("Disabled")
-                        .HasColumnType("boolean")
-                        .HasColumnName("disabled");
-
-                    b.Property<string>("Name")
+                    b.Property<string>("Hash")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("name");
+                        .HasColumnName("hash");
 
-                    b.Property<long>("OwnerDiscordSnowflake")
-                        .HasColumnType("bigint")
-                        .HasColumnName("owner_discord_snowflake");
+                    b.Property<string>("ShortHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("short_hash");
 
-                    b.Property<int>("Uses")
+                    b.Property<int>("TagId")
                         .HasColumnType("integer")
-                        .HasColumnName("uses");
+                        .HasColumnName("tag_id");
+
+                    b.Property<DateTime>("TimestampUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("timestamp_utc");
 
                     b.HasKey("Id")
-                        .HasName("pk_tagr_tags");
+                        .HasName("pk_tagr_revisions");
 
-                    b.ToTable("tagr_tags", (string)null);
+                    b.HasIndex("TagId")
+                        .HasDatabaseName("ix_tagr_revisions_tag_id");
+
+                    b.ToTable("tagr_revisions", (string)null);
+                });
+
+            modelBuilder.Entity("TagR.Domain.TagUse", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<long>("ChannelSnowflake")
+                        .HasColumnType("bigint")
+                        .HasColumnName("channel_snowflake");
+
+                    b.Property<DateTime>("DateTimeUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_time_utc");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("integer")
+                        .HasColumnName("tag_id");
+
+                    b.Property<long>("UserSnowflake")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_snowflake");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tagr_uses");
+
+                    b.HasIndex("TagId")
+                        .HasDatabaseName("ix_tagr_uses_tag_id");
+
+                    b.ToTable("tagr_uses", (string)null);
                 });
 
             modelBuilder.Entity("TagR.Domain.AuditLog", b =>
@@ -113,9 +275,68 @@ namespace TagR.Database.Migrations
                     b.Navigation("Tag");
                 });
 
+            modelBuilder.Entity("TagR.Domain.TagAlias", b =>
+                {
+                    b.HasOne("TagR.Domain.Tag", "Parent")
+                        .WithMany("Aliases")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_tagr_aliases_tags_parent_id");
+
+                    b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("TagR.Domain.TagAliasUse", b =>
+                {
+                    b.HasOne("TagR.Domain.TagAlias", "TagAlias")
+                        .WithMany("Uses")
+                        .HasForeignKey("TagAliasId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_tagr_alias_uses_tagr_aliases_tag_alias_id");
+
+                    b.Navigation("TagAlias");
+                });
+
+            modelBuilder.Entity("TagR.Domain.TagRevision", b =>
+                {
+                    b.HasOne("TagR.Domain.Tag", "Tag")
+                        .WithMany("Revisions")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_tagr_revisions_tagr_tags_tag_id");
+
+                    b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("TagR.Domain.TagUse", b =>
+                {
+                    b.HasOne("TagR.Domain.Tag", "Tag")
+                        .WithMany("Uses")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_tagr_uses_tagr_tags_tag_id");
+
+                    b.Navigation("Tag");
+                });
+
             modelBuilder.Entity("TagR.Domain.Tag", b =>
                 {
+                    b.Navigation("Aliases");
+
                     b.Navigation("AuditLogs");
+
+                    b.Navigation("Revisions");
+
+                    b.Navigation("Uses");
+                });
+
+            modelBuilder.Entity("TagR.Domain.TagAlias", b =>
+                {
+                    b.Navigation("Uses");
                 });
 #pragma warning restore 612, 618
         }

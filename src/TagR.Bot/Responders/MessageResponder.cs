@@ -1,5 +1,8 @@
 ﻿using Remora.Discord.API.Abstractions.Gateway.Events;
+using Remora.Discord.API.Abstractions.Objects;
+using Remora.Discord.API.Objects;
 using Remora.Discord.Gateway.Responders;
+using Remora.Rest.Core;
 using Remora.Results;
 using TagR.Application.Services.Abstractions;
 
@@ -31,7 +34,13 @@ public class MessageResponder : IResponder<IMessageCreate>
         if (!firstChar.Equals(_prefix))
             return Result.FromSuccess();
 
-        await _messageProcessing.ProcessMessageAsync(gatewayEvent.ChannelID, gatewayEvent.ID, content, ct);
+        var msgRef = new Optional<IMessageReference>();
+        if(gatewayEvent.ReferencedMessage.IsDefined(out var rfr))
+        {
+            msgRef = new MessageReference(rfr.ID, rfr.ChannelID, gatewayEvent.GuildID, false);
+        }
+
+        await _messageProcessing.ProcessMessageAsync(gatewayEvent.ChannelID, gatewayEvent.ID, gatewayEvent.Author.ID, content, msgRef, ct);
         return Result.FromSuccess();
     }
 }

@@ -13,5 +13,25 @@ public class TagEntityConfiguration : IEntityTypeConfiguration<Tag>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id)
             .ValueGeneratedOnAdd();
+
+        builder.HasIndex(x => x.Name)
+            .IsUnique();
+
+        builder.Ignore(p => p.Content);
+
+        builder.HasMany(x => x.Revisions)
+            .WithOne(x => x.Tag)
+            .HasForeignKey(x => x.TagId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.HasMany(x => x.Aliases)
+            .WithOne(x => x.Parent)
+            .HasForeignKey(x => x.ParentId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.HasMany(x => x.Uses)
+            .WithOne(x => x.Tag)
+            .HasForeignKey(x => x.TagId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

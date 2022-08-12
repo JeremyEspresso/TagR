@@ -1,5 +1,6 @@
 ﻿using Remora.Discord.API.Abstractions.Objects;
 using Remora.Discord.API.Abstractions.Rest;
+using Remora.Discord.API.Objects;
 using Remora.Rest.Core;
 using Remora.Results;
 using TagR.Application.Services.Abstractions;
@@ -15,9 +16,15 @@ public class DiscordMessageService : IDiscordMessageService
         _restChannelAPI = restChannelAPI;
     }
 
-    public Task<Result<IMessage>> CreateMessageAsync(Snowflake channelId, string content, CancellationToken ct = default)
+    public Task<Result<IMessage>> CreateMessageAsync(Snowflake channelId, string content, Optional<IMessageReference> messageReference,  bool allowMentions, CancellationToken ct = default)
     {
-        return _restChannelAPI.CreateMessageAsync(channelId, content, ct: ct);
+        Optional<IAllowedMentions> allowedMentions = new();
+        if (!allowMentions)
+        {
+            allowedMentions = new AllowedMentions(MentionRepliedUser: false);
+        }
+
+        return _restChannelAPI.CreateMessageAsync(channelId, content, messageReference: messageReference, allowedMentions: allowedMentions, ct: ct);
     }
 }
 
