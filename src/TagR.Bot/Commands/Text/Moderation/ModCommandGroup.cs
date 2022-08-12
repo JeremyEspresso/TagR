@@ -7,6 +7,7 @@ using Remora.Results;
 using TagR.Application.ResultErrors;
 using TagR.Application.Services.Abstractions;
 using TagR.Bot.Commands.Conditions.Attributes;
+using TagR.Domain.Moderation;
 
 namespace TagR.Bot.Commands.Text.Moderation;
 
@@ -26,9 +27,9 @@ public class ModCommandGroup : CommandGroup
 
     [RequireModerator]
     [Command("block", "incapacitate")]
-    public async Task<IResult> Block(IUser user, [Greedy] string? reason = default)
+    public async Task<IResult> Block(IUser user, BlockedAction actions)
     {
-        var blockUser = await _modService.BlockUserAsync(user.ID, reason, _ctx.User.ID, CancellationToken);
+        var blockUser = await _modService.BlockUserAsync(user.ID, actions, _ctx.User.ID, CancellationToken);
 
         var content = string.Empty;
 
@@ -39,7 +40,7 @@ public class ModCommandGroup : CommandGroup
 		        case UserIsAlreadyBlockedError userAlreadyBlocked:
 		        {
 			        var bu = userAlreadyBlocked!.BlockedUser;
-			        content = $"User `{user.ID}` was already blocked at `{bu.BlockedAtUtc}`. Reason: `{bu.Reason ?? "Not specified."}`";
+			        content = $"User `{user.ID}` was already blocked at `{bu.BlockedAtUtc}`.`";
 			        break;
 		        }
 		        case UnableToBlockSelfError ube:
@@ -49,7 +50,7 @@ public class ModCommandGroup : CommandGroup
         }
         else
         {
-            content = $"User `{user.ID}` successfully blocked. Reason: `{reason ?? "Not specified."}`";
+            content = $"User `{user.ID}` successfully blocked.`";
         }
 
         await _messageService.CreateMessageAsync
@@ -72,9 +73,9 @@ public class ModCommandGroup : CommandGroup
 
     [RequireModerator]
     [Command("unblock")]
-    public async Task<IResult> Unblock(IUser user)
+    public async Task<IResult> Unblock(IUser user, BlockedAction actions)
     {
-        var unblockUser = await _modService.UnblockUserAsync(user.ID, _ctx.User.ID, CancellationToken);
+        var unblockUser = await _modService.UnblockUserAsync(user.ID, actions, _ctx.User.ID, CancellationToken);
 
         await _messageService.CreateMessageAsync
             (

@@ -3,6 +3,7 @@ using Remora.Discord.Commands.Extensions;
 using Remora.Discord.Commands.Responders;
 using Remora.Discord.Gateway.Extensions;
 using TagR.Bot.Commands.Conditions;
+using TagR.Bot.Commands.Parsers;
 using TagR.Bot.Commands.Text;
 using TagR.Bot.Commands.Text.Moderation;
 using TagR.Bot.Responders;
@@ -28,6 +29,8 @@ public static class ServiceCollectionExtensions
         });
 
         serviceCollection.AddCondition<RequireModeratorCondition>();
+
+        serviceCollection.AddParser<BlockedActionParser>();
 
         serviceCollection.AddCommandTree()
             .WithCommandGroup<TagCommandGroup>()

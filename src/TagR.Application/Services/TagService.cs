@@ -7,6 +7,7 @@ using TagR.Domain;
 using TagR.Application.ResultErrors;
 using TagR.Application.Services.Abstractions;
 using TagR.Application.Entities.Auditing;
+using TagR.Domain.Moderation;
 
 namespace TagR.Application.Services;
 
@@ -27,7 +28,7 @@ public class TagService : ITagService
 
     public async Task<Result<Tag>> CreateTagAsync(string tagName, string content, Snowflake actorId, CancellationToken ct = default)
     {
-        var blocked = await CheckBlockedStatusAsync(actorId, ct);
+        var blocked = await _permissionService.IsActionBlockedAsync(actorId, BlockedAction.TagModify, ct);
         if (!blocked.IsSuccess)
         {
             return Result<Tag>.FromError(blocked.Error);
@@ -76,7 +77,7 @@ public class TagService : ITagService
 
     public async Task<Result<Tag>> UpdateTagAsync(string tagName, string newContent, Snowflake actorId, CancellationToken ct = default)
     {
-        var blocked = await CheckBlockedStatusAsync(actorId, ct);
+        var blocked = await _permissionService.IsActionBlockedAsync(actorId, BlockedAction.TagModify, ct);
         if (!blocked.IsSuccess)
         {
             return Result<Tag>.FromError(blocked.Error);
@@ -128,7 +129,7 @@ public class TagService : ITagService
 
     public async Task<Result> DeleteTagAsync(string tagName, Snowflake actorId, CancellationToken ct = default)
     {
-        var blocked = await CheckBlockedStatusAsync(actorId, ct);
+        var blocked = await _permissionService.IsActionBlockedAsync(actorId, BlockedAction.TagModify, ct);
         if (!blocked.IsSuccess)
         {
             return Result.FromError(blocked.Error);
@@ -261,15 +262,6 @@ public class TagService : ITagService
                 .FirstOrDefaultAsync(ct);
         
         return x?.Tag!;
-    }
-
-    private async Task<Result> CheckBlockedStatusAsync(Snowflake actor, CancellationToken ct = default)
-    {
-        var blockedUser = await _context.BlockedUsers.FirstOrDefaultAsync(bu => bu.UserSnowflake == actor, ct);
-
-        return blockedUser is not null 
-            ? Result.FromError(new MessageError("You are blocked from creating new tags.")) 
-            : Result.FromSuccess();
     }
 
     private TagRevision CreateRevision(string content, DateTime timestamp)

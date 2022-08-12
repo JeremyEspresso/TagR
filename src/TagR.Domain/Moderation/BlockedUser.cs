@@ -10,5 +10,5 @@ public class BlockedUser
 
     public DateTime BlockedAtUtc { get; set; }
 
-    public string? Reason { get; set; }
+    public BlockedAction BlockedActions { get; set; }
 }

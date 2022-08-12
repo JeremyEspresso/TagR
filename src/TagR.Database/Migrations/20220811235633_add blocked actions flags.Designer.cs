@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TagR.Database;
@@ -11,9 +12,10 @@ using TagR.Database;
 namespace TagR.Database.Migrations
 {
     [DbContext(typeof(TagRDbContext))]
-    partial class TagRDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220811235633_add blocked actions flags")]
+    partial class addblockedactionsflags
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -76,6 +78,10 @@ namespace TagR.Database.Migrations
                     b.Property<DateTime>("BlockedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("blocked_at_utc");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text")
+                        .HasColumnName("reason");
 
                     b.Property<long>("UserSnowflake")
                         .HasColumnType("bigint")
