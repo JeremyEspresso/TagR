@@ -41,10 +41,13 @@ public class BlockedActionParserTests
     public async Task TryParseAsync_Invalid_Token_ShouldReturnParserError()
     {
         const string token = "k";
+        var expected = $"Unknown token `{token}`";
 
         var result = await _sut.TryParseAsync(token);
         
         Assert.False(result.IsSuccess);
+        
         Assert.IsType<ParserError>(result.Error);
+        Assert.Equal(expected, result!.Error!.Message);
     }
 }
