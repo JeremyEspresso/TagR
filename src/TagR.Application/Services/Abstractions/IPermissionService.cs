@@ -6,7 +6,7 @@ namespace TagR.Application.Services.Abstractions;
 
 public interface IPermissionService
 {
-    Task<Result> IsModerator(Snowflake userId, CancellationToken ct = default);
+    Task<bool> IsModerator(Snowflake userId, CancellationToken ct = default);
 
-    Task<Result> IsActionBlockedAsync(Snowflake userId, BlockedAction blockedActions, CancellationToken ct = default);
+    Task<bool> IsActionBlockedAsync(Snowflake userId, BlockedAction blockedActions, CancellationToken ct = default);
 }

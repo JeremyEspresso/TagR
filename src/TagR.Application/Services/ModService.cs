@@ -28,9 +28,9 @@ public class ModService : IModService
 
         var blockedUser = await GetBlockedUserBySnowflakeAsync(userId, ct);
 
-        if (blockedUser.IsDefined(out var bu))
+        if (blockedUser.IsDefined(out var bu) && bu.BlockedActions == blockedActions)
         {
-            return Result.FromError(new UserIsAlreadyBlockedError(bu));
+            return Result.FromError(new UserIsAlreadyBlockedForActionsError(bu));
         }
 
         _context.BlockedUsers.Add(new BlockedUser
@@ -52,9 +52,9 @@ public class ModService : IModService
         {
             return Result.FromError(new UserIsNotBlockedError(userId));
         }
-
-       bu.BlockedActions &= ~restoredActions;
-
+        
+        bu.BlockedActions &= ~restoredActions;
+       
        if (bu.BlockedActions == BlockedAction.None)
        {
            _context.BlockedUsers.Remove(bu);

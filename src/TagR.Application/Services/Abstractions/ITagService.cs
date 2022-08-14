@@ -16,8 +16,10 @@ public interface ITagService
 
     Task<Result> DisableTagAsync(string tagName, Snowflake actorId, CancellationToken ct = default);
 
-    Task<Result> IncrementTagUseAsync(Tag tag, Snowflake channelId, Snowflake userId, DateTime usedAtUtc,
+    Task<Result> AddTagUseAsync(Tag tag, Snowflake channelId, Snowflake userId, DateTime usedAtUtc,
         CancellationToken ct = default);
 
     Task<Optional<Tag>> GetTagByNameAsync(string tagName, CancellationToken ct = default);
+
+    Task<bool> TagExitsByName(string name, CancellationToken ct = default);
 }

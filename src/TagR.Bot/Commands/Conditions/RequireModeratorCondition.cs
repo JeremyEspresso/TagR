@@ -1,6 +1,7 @@
 using Remora.Commands.Conditions;
 using Remora.Discord.Commands.Contexts;
 using Remora.Results;
+using TagR.Application.ResultErrors;
 using TagR.Application.Services.Abstractions;
 using TagR.Bot.Commands.Conditions.Attributes;
 
@@ -19,6 +20,11 @@ public class RequireModeratorCondition : ICondition<RequireModeratorAttribute>
 
 	public async ValueTask<Result> CheckAsync(RequireModeratorAttribute attribute, CancellationToken ct = default)
 	{
-		return await _permissionService.IsModerator(_ctx.User.ID, ct);
+		var isMod = await _permissionService.IsModerator(_ctx.User.ID, ct);
+
+		return isMod
+			? Result.FromSuccess()
+			: Result.FromError(new InsufficientPermissionsError());
+
 	}
 }

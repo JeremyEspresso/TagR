@@ -37,10 +37,10 @@ public class ModCommandGroup : CommandGroup
         {
 	        switch (blockUser.Error)
 	        {
-		        case UserIsAlreadyBlockedError userAlreadyBlocked:
+		        case UserIsAlreadyBlockedForActionsError userAlreadyBlocked:
 		        {
 			        var bu = userAlreadyBlocked!.BlockedUser;
-			        content = $"User `{user.ID}` was already blocked at `{bu.BlockedAtUtc}`.`";
+			        content = $"User `{user.ID}` was already blocked at `{bu.BlockedAtUtc}`.";
 			        break;
 		        }
 		        case UnableToBlockSelfError ube:
@@ -50,7 +50,7 @@ public class ModCommandGroup : CommandGroup
         }
         else
         {
-            content = $"User `{user.ID}` successfully blocked.`";
+            content = $"User `{user.ID}` successfully blocked.";
         }
 
         await _messageService.CreateMessageAsync

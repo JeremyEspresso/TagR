@@ -30,16 +30,14 @@ public class PermissionService : IPermissionService
         _context = context;
     }
 
-    public async Task<Result> IsActionBlockedAsync(Snowflake actor, BlockedAction blockedActions, CancellationToken ct = default)
+    public async Task<bool> IsActionBlockedAsync(Snowflake actor, BlockedAction blockedActions, CancellationToken ct = default)
     {
         var blockedUser = await _context.BlockedUsers.FirstOrDefaultAsync(bu => bu.UserSnowflake == actor, ct);
 
-        return blockedUser is not null && blockedUser.BlockedActions.HasFlag(blockedActions)
-            ? Result.FromError(new MessageError("You are blocked from creating new tags."))
-            : Result.FromSuccess();
+        return blockedUser is not null && blockedUser.BlockedActions.HasFlag(blockedActions);
     }
 
-    public async Task<Result> IsModerator(Snowflake userId, CancellationToken ct = default)
+    public async Task<bool> IsModerator(Snowflake userId, CancellationToken ct = default)
     {
         var member = await _cache.GetOrCreateAsync(userId.ToString(), async (entry) =>
         {
@@ -49,8 +47,6 @@ public class PermissionService : IPermissionService
             return getMember.Entity!;
         });
 
-        return member.Roles.Contains(_moderatorSnowflake)
-            ? Result.FromSuccess()
-            : Result.FromError(new MessageError("Not a moderator."));
+        return member.Roles.Contains(_moderatorSnowflake);
     }
 }
