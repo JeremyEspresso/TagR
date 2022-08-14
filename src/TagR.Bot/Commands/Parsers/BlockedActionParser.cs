@@ -22,7 +22,7 @@ public class BlockedActionParser : AbstractTypeParser<BlockedAction>
                     output |= BlockedAction.TagInvoke;
                     break;
                 default:
-                    return new ValueTask<Result<BlockedAction>>(Result<BlockedAction>.FromError(new ParserError(ch.ToString())));
+                    return new ValueTask<Result<BlockedAction>>(Result<BlockedAction>.FromError(new ParserError($"Unknown token `{ch.ToString()}`")));
             }
         }
 

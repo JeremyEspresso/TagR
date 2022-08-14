@@ -13,7 +13,7 @@ public class TagEntityConfiguration : IEntityTypeConfiguration<Tag>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id)
             .ValueGeneratedOnAdd();
-
+        
         builder.HasIndex(x => x.Name)
             .IsUnique();
 
@@ -23,7 +23,7 @@ public class TagEntityConfiguration : IEntityTypeConfiguration<Tag>
             .WithOne(x => x.Tag)
             .HasForeignKey(x => x.TagId)
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         builder.HasMany(x => x.Aliases)
             .WithOne(x => x.Parent)
             .HasForeignKey(x => x.ParentId)

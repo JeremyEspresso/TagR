@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OneOf;
 using Remora.Rest.Core;
 using Remora.Results;
 using TagR.Application.Common.Hashing;
@@ -28,10 +29,10 @@ public class TagService : ITagService
 
     public async Task<Result<Tag>> CreateTagAsync(string tagName, string content, Snowflake actorId, CancellationToken ct = default)
     {
-        var blocked = await _permissionService.IsActionBlockedAsync(actorId, BlockedAction.TagModify, ct);
-        if (!blocked.IsSuccess)
+        var blocked = await _permissionService.IsActionBlockedAsync(actorId, BlockedAction.TagCreate, ct);
+        if (blocked)
         {
-            return Result<Tag>.FromError(blocked.Error);
+            return Result<Tag>.FromError(new BlockedError("You are blocked from creating tags."));
         }
         
         var getTagByName = await GetTagByNameAsync(tagName, ct);
@@ -77,10 +78,10 @@ public class TagService : ITagService
 
     public async Task<Result<Tag>> UpdateTagAsync(string tagName, string newContent, Snowflake actorId, CancellationToken ct = default)
     {
-        var blocked = await _permissionService.IsActionBlockedAsync(actorId, BlockedAction.TagModify, ct);
-        if (!blocked.IsSuccess)
+        var blocked = await _permissionService.IsActionBlockedAsync(actorId, BlockedAction.TagEdit, ct);
+        if (blocked)
         {
-            return Result<Tag>.FromError(blocked.Error);
+            return Result<Tag>.FromError(new BlockedError("You are blocked from editing tags."));
         }
         
         var getTag = await GetTagByNameAsync(tagName, ct);
@@ -89,7 +90,7 @@ public class TagService : ITagService
             return Result<Tag>.FromError(new TagNotFoundError());
         }
 
-        var isMod = (await _permissionService.IsModerator(actorId, ct)).IsSuccess;
+        var isMod = await _permissionService.IsModerator(actorId, ct);
         
         if (!isMod && tag.OwnerDiscordSnowflake != actorId)
         {
@@ -129,10 +130,10 @@ public class TagService : ITagService
 
     public async Task<Result> DeleteTagAsync(string tagName, Snowflake actorId, CancellationToken ct = default)
     {
-        var blocked = await _permissionService.IsActionBlockedAsync(actorId, BlockedAction.TagModify, ct);
-        if (!blocked.IsSuccess)
+        var blocked = await _permissionService.IsActionBlockedAsync(actorId, BlockedAction.TagDelete, ct);
+        if (blocked)
         {
-            return Result.FromError(blocked.Error);
+            return Result.FromError(new BlockedError("You are blocked from deleting tags."));
         }
         
         var getTag = await GetTagByNameAsync(tagName, ct);
@@ -141,7 +142,7 @@ public class TagService : ITagService
             return Result.FromError(new TagNotFoundError());
         }
         
-        var isMod = (await _permissionService.IsModerator(actorId, ct)).IsSuccess;
+        var isMod = await _permissionService.IsModerator(actorId, ct);
         
         if (!isMod && tag.OwnerDiscordSnowflake != actorId)
         {
@@ -174,7 +175,7 @@ public class TagService : ITagService
             return Result.FromError(new TagNotFoundError());
         }
         
-        var isMod = (await _permissionService.IsModerator(actorId, ct)).IsSuccess;
+        var isMod = await _permissionService.IsModerator(actorId, ct);
 
         if (!isMod)
         {
@@ -206,7 +207,7 @@ public class TagService : ITagService
             return Result.FromError(new TagNotFoundError());
         }
         
-        var isMod = (await _permissionService.IsModerator(actorId, ct)).IsSuccess;
+        var isMod = await _permissionService.IsModerator(actorId, ct);
 
         if (!isMod)
         {
@@ -230,7 +231,7 @@ public class TagService : ITagService
         return Result.FromSuccess();
     }
 
-    public async Task<Result> IncrementTagUseAsync(Tag tag, Snowflake channelId, Snowflake userId, DateTime usedAtUtc, CancellationToken ct = default)
+    public async Task<Result> AddTagUseAsync(Tag tag, Snowflake channelId, Snowflake userId, DateTime usedAtUtc, CancellationToken ct = default)
     {
         var tagUse = new TagUse
         {
@@ -252,7 +253,15 @@ public class TagService : ITagService
         return (await _context.Tags
             .Include(t => t.AuditLogs)
             .Include(t => t.Revisions)
+            .Include(t => t.Uses)
             .FirstOrDefaultAsync(t => t.Name == tagName, ct))!;
+    }
+
+    public Task<bool> TagExitsByName(string name, CancellationToken ct = default)
+    {
+        return _context.Tags
+            .Include(t => t.Aliases)
+            .AnyAsync(t => t.Name == name || t.Aliases.Any(ta => ta.Name == name), ct);
     }
 
     private async Task<Optional<Tag>> GetTagByContentAsync(string content, CancellationToken ct = default)

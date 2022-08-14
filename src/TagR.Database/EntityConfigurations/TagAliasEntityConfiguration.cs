@@ -9,6 +9,9 @@ public class TagAliasEntityConfiguration : IEntityTypeConfiguration<TagAlias>
     public void Configure(EntityTypeBuilder<TagAlias> builder)
     {
         builder.ToTable("tagr_aliases");
+        
+        builder.HasIndex(x => x.Name)
+            .IsUnique();
 
         builder.HasMany(x => x.Uses)
             .WithOne(x => x.TagAlias)

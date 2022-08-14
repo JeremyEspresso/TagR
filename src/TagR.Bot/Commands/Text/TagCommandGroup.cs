@@ -13,6 +13,7 @@ public class TagCommandGroup : CommandGroup
 {
     private readonly MessageContext _ctx;
     private readonly ITagService _tagService;
+    private readonly ITagAliasService _tagAliasService;
     private readonly IDiscordMessageService _messageService;
     private readonly ILogger<TagCommandGroup> _logger;
 
@@ -20,12 +21,14 @@ public class TagCommandGroup : CommandGroup
     (
         ICommandContext ctx,
         ITagService tagService,
+        ITagAliasService tagAliasService,
         IDiscordMessageService messageService,
         ILogger<TagCommandGroup> logger
     )
     {
         _ctx = (MessageContext)ctx;
         _tagService = tagService;
+        _tagAliasService = tagAliasService;
         _messageService = messageService;
         _logger = logger;
     }
@@ -156,9 +159,26 @@ public class TagCommandGroup : CommandGroup
     }
 
     [Command("alias")]
-    public async Task<IResult> Alias(string tagName, string nameOfAliasedTag)
+    public async Task<IResult> Alias(string targetTag, string tagName)
     {
-        throw new NotImplementedException();
+        var x = await _tagAliasService.CreateAliasAsync(tagName, targetTag, _ctx.User.ID, CancellationToken);
+        if (!x.IsSuccess)
+        {
+            // TODO
+            return new Result();
+        }
+
+        return await _messageService.CreateMessageAsync(_ctx.ChannelID, "Created alias xdd",
+            new MessageReference
+            (
+                _ctx.MessageID,
+                _ctx.ChannelID,
+                _ctx.GuildID,
+                false
+            ),
+            false,
+            CancellationToken
+        );
     }
 }
 

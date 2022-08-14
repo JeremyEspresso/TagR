@@ -2,4 +2,4 @@
 
 namespace TagR.Application.ResultErrors;
 
-public record ParserError(string token) : ResultError($"Unknown token `{token}`");
+public record ParserError(string parserErrorMessage) : ResultError(parserErrorMessage);
